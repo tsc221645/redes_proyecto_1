@@ -1,0 +1,9 @@
+# Propuesta del servidor MCP Local
+
+Se propone desarrollar un chatbot empresarial orientado a apoyar a los directivos en el análisis y diagnóstico de la operación de una empresa. El chatbot se conectará, mediante el protocolo Model Context Protocol (MCP), con una base de datos empresarial que contiene información relacionada con productos, ventas, inventarios y otros indicadores relevantes. Esto permitirá que los usuarios realicen consultas en lenguaje natural y obtengan respuestas basadas en información real de la organización, sin necesidad de conocer la estructura de la base de datos ni utilizar consultas técnicas.
+
+A diferencia de una herramienta que únicamente muestra datos, el chatbot buscará facilitar la interpretación de la información y la identificación de posibles situaciones que requieran atención. Por ejemplo, podrá ayudar a detectar variaciones en las ventas, productos con bajo rendimiento, cambios importantes entre periodos, riesgos relacionados con inventario u otras anomalías dentro de la operación. Los resultados se presentarán de manera clara y comprensible, permitiendo que los directivos cuenten con información oportuna para respaldar la toma de decisiones.
+
+El valor de esta es herramienta que a parte de mostrar la información solicitada, se proporcionan accionables que pueden ayudar a los directivos a tomar decisiones efectivas basadas en datos reales.
+
+El proyecto permitirá demostrar cómo un modelo de lenguaje puede coordinar herramientas externas mediante MCP para acceder a fuentes de información empresariales. El sistema contemplará una conexión local y posteriormente remota con el servidor MCP desarrollado, manteniendo un registro de las interacciones realizadas. Además, se considerarán medidas de seguridad y privacidad para proteger la información de la empresa, limitando el acceso únicamente a los datos y operaciones necesarias para realizar los análisis.
