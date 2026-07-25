@@ -20,3 +20,9 @@ Las tecnologías propuestas para el desarrollo del proyecto son las siguientes:
 * **Python:** lenguaje principal para desarrollar el chatbot, el cliente MCP y el servidor MCP personalizado.
 * **SQL:** lenguaje utilizado internamente para consultar y procesar la información almacenada en la base de datos.
 * **HTTP y HTTPS:** protocolos utilizados para la comunicación con el servidor MCP remoto y otros servicios externos.
+
+
+## Contexto de la base de Datos
+La base de datos proviene de una empresa real, por temas de confidencialidad, se anonimizaran ciertos resultados para proteger la integridad de los mismos.  La base de datos se levanta de manera local en una computadora personal, la cual tiene la capacidad de correrla sin ningun problema.
+
+## Arquitectura
