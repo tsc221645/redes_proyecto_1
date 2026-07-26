@@ -34,3 +34,11 @@ class SalesRepository:
             cursor.execute(query, (start_year, end_year))
             columns = [column[0] for column in cursor.description]
             return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    def query(self, sql: str, parameters: tuple[Any, ...]) -> List[Dict[str, Any]]:
+        """Execute a repository-owned parameterized query and return dictionaries."""
+        with self.database.connect() as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql, parameters)
+            columns = [column[0] for column in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
