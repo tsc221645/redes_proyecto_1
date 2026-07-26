@@ -47,7 +47,9 @@ class StdioTransport:
     def send(self, message: Dict[str, Any]) -> Dict[str, Any] | None:
         """Send one message and wait for its response; notifications return None."""
         if not self.is_running:
-            raise RuntimeError("stdio server is not running")
+            details = "; ".join(self.stderr_lines())
+            suffix = f": {details}" if details else ""
+            raise RuntimeError(f"stdio server is not running{suffix}")
         assert self.process is not None and self.process.stdin is not None
         self.process.stdin.write(json.dumps(message, ensure_ascii=False) + "\n")
         self.process.stdin.flush()
