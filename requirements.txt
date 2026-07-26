@@ -1,2 +1,4 @@
 pydantic>=1.10.0
 pytest>=7.0.0
+python-dotenv>=1.0.0
+pyodbc>=5.0.0
