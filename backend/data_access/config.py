@@ -21,7 +21,7 @@ class SQLAnywhereSettings:
     @classmethod
     def from_env(cls, env_path: str | Path | None = None) -> "SQLAnywhereSettings":
         load_dotenv(dotenv_path=env_path)
-        required = ["SQLANYWHERE_HOST", "SQLANYWHERE_PORT", "SQLANYWHERE_SERVER", "SQLANYWHERE_DATABASE", "SQLANYWHERE_USER", "SQLANYWHERE_PASSWORD", "SQLANYWHERE_DRIVER"]
+        required = ["SQLANYWHERE_HOST", "SQLANYWHERE_PORT", "SQLANYWHERE_SERVER", "SQLANYWHERE_USER", "SQLANYWHERE_PASSWORD", "SQLANYWHERE_DRIVER"]
         missing = [name for name in required if not os.getenv(name)]
         if missing:
             raise ValueError(f"Missing SQL Anywhere configuration: {', '.join(missing)}")
@@ -29,7 +29,7 @@ class SQLAnywhereSettings:
             host=os.environ["SQLANYWHERE_HOST"],
             port=int(os.environ["SQLANYWHERE_PORT"]),
             server=os.environ["SQLANYWHERE_SERVER"],
-            database=os.environ["SQLANYWHERE_DATABASE"],
+            database=os.getenv("SQLANYWHERE_DATABASE", ""),
             user=os.environ["SQLANYWHERE_USER"],
             password=os.environ["SQLANYWHERE_PASSWORD"],
             driver=os.environ["SQLANYWHERE_DRIVER"],

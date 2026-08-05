@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import traceback
 from typing import Any, Dict, Iterable
 
 from backend.mcp_core.jsonrpc import (
@@ -59,6 +61,8 @@ class MCPServer:
         except ValueError as exc:
             return self._error(request_id, INVALID_PARAMS, str(exc))
         except Exception:
+            if os.getenv("LLM_DEBUG", "false").lower() == "true":
+                traceback.print_exc()
             return self._error(request_id, INTERNAL_ERROR, "Internal tool error")
 
     @staticmethod

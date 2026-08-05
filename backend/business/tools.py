@@ -9,6 +9,13 @@ from backend.data_access.repositories import SalesRepository
 def _date(value: Any, name: str) -> str:
     if not isinstance(value, str):
         raise ValueError(f"{name} must use YYYY-MM-DD format")
+    value = value.strip()
+    if "T" in value:
+        value = value.split("T", 1)[0]
+    if value.count("/") == 2:
+        parts = value.split("/")
+        if len(parts[0]) == 4:
+            value = "-".join(parts)
     try:
         date.fromisoformat(value)
     except ValueError as exc:
@@ -30,8 +37,7 @@ class BusinessTools:
         currency = arguments.get("currency")
         if currency is not None and currency not in {"Q.", "US$"}:
             raise ValueError("currency must be Q. or US$")
-        rows = self.repository.query(
-            """
+        query = """
             SELECT ANIO, MES,
                    COUNT(DISTINCT SERIE || '-' || CAST(CORRELATIVO AS VARCHAR)) AS total_facturas,
                    SUM(VENTA_NETA_ASIGNADA_LINEA) AS venta_neta,
@@ -42,12 +48,16 @@ class BusinessTools:
                        NULLIF(COUNT(DISTINCT SERIE || '-' || CAST(CORRELATIVO AS VARCHAR)), 0) AS ticket_promedio
             FROM V_LINEAS_FACTURADAS_ANALITICAS
             WHERE FECHA_INGRESO BETWEEN ? AND ?
-              AND (? IS NULL OR MONEDA = ?)
+        """
+        parameters: list[Any] = [start_date, end_date]
+        if currency is not None:
+            query += " AND MONEDA = ?\n"
+            parameters.append(currency)
+        query += """
             GROUP BY ANIO, MES
             ORDER BY ANIO, MES
-            """,
-            (start_date, end_date, currency, currency),
-        )
+        """
+        rows = self.repository.query(query, tuple(parameters))
         return {"start_date": start_date, "end_date": end_date, "currency": currency or "Q.", "rows": rows}
 
     def compare_periods(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
