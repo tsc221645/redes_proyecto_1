@@ -7,6 +7,7 @@ from backend.mcp_core.mcp.client import MCPClient
 from backend.mcp_core.mcp.server import MCPServer
 from backend.mcp_core.mcp.types import ServerInfo
 from .mcp_tools import create_business_mcp_tools
+from .registry import BusinessToolRegistry
 
 
 class InProcessMCPTransport:
@@ -21,7 +22,7 @@ class InProcessMCPTransport:
 
 def create_business_mcp_client(settings: SQLAnywhereSettings) -> tuple[MCPClient, list[dict[str, Any]]]:
     """Create a local MCP client and expose its tools to the LLM."""
-    tools = create_business_mcp_tools(settings)
+    tools = BusinessToolRegistry(create_business_mcp_tools(settings)).all()
     server = MCPServer(ServerInfo("business-mcp-server", "0.1.0"), tools)
     client = MCPClient(InProcessMCPTransport(server))
     client.initialize()
