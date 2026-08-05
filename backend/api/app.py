@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import os
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException, Response
@@ -32,6 +34,7 @@ class ToolResponse(BaseModel):
 
 
 app = FastAPI(title="Executive MCP Chatbot API", version="0.1.0")
+logger = logging.getLogger("executive_chatbot.api")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -69,6 +72,7 @@ def send_message(session_id: str, request: MessageRequest) -> MessageResponse:
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (RuntimeError, ValueError) as exc:
+        logger.exception("Chat request failed")
         raise HTTPException(status_code=502, detail="Chat provider or tool error") from exc
     return MessageResponse(session_id=session_id, response=response)
 
