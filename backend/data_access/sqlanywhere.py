@@ -15,11 +15,12 @@ class SQLAnywhereConnection:
     def connection_string(self) -> str:
         """Build the ODBC connection string for the local TCP server."""
         read_only = ";ReadOnly=YES" if self.settings.read_only else ""
+        database = f"DBN={self.settings.database};" if self.settings.database else ""
         return (
             f"DRIVER={{{self.settings.driver}}};"
-            f"Host={self.settings.host}:{self.settings.port};"
+            f"CommLinks=tcpip(host={self.settings.host}:{self.settings.port});"
             f"ServerName={self.settings.server};"
-            f"DBN={self.settings.database};"
+            f"{database}"
             f"UID={self.settings.user};PWD={self.settings.password}{read_only}"
         )
 
