@@ -165,9 +165,53 @@ class BusinessTools:
                     parameters.append(value)
         group_sql = ", ".join(dimensions[item] for item in requested_dimensions)
         query += f" GROUP BY {group_sql}"
-        order_by = arguments.get("order_by", "sales")
+        order_by = arguments.get("order_by", requested_measures[0])
         if order_by not in requested_measures:
             raise ValueError("order_by must be one of the selected metrics")
         query += f" ORDER BY {order_by} DESC"
         rows = self.repository.query(query, tuple(parameters))
         return {"start_date": start_date, "end_date": end_date, "rows": rows}
+
+    def get_customer_product_mix(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Find the leading customer for a product and list that customer's other products."""
+        start_date = _date(arguments.get("start_date"), "start_date")
+        end_date = _date(arguments.get("end_date"), "end_date")
+        product_name = arguments.get("product_name")
+        if not isinstance(product_name, str) or not product_name.strip():
+            raise ValueError("product_name is required")
+        limit = arguments.get("limit", 10)
+        if not isinstance(limit, int) or not 1 <= limit <= 100:
+            raise ValueError("limit must be an integer between 1 and 100")
+        top_customer = self.repository.query(
+            """
+            SELECT TOP 1 v.CLIENTE AS client_code, pc.NOMBRE_CLIENTE AS client,
+                   SUM(v.CANTIDAD_CONVERTIDA) AS units,
+                   SUM(v.VENTA_NETA_ASIGNADA_LINEA) AS sales
+            FROM V_LINEAS_FACTURADAS_ANALITICAS v
+            LEFT JOIN PT_CLIENTES pc ON v.CLIENTE = pc.CLIENTE
+            WHERE v.FECHA_INGRESO BETWEEN ? AND ?
+              AND UPPER(v.DESCRIPCION) LIKE UPPER(?)
+            GROUP BY v.CLIENTE, pc.NOMBRE_CLIENTE
+            ORDER BY units DESC
+            """,
+            (start_date, end_date, f"%{product_name}%"),
+        )
+        if not top_customer:
+            return {"top_customer": None, "rows": []}
+        client_code = top_customer[0]["client_code"]
+        rows = self.repository.query(
+            """
+            SELECT TOP ? v.CODIGO_PT AS product_code, v.DESCRIPCION AS product_name,
+                   SUM(v.CANTIDAD_CONVERTIDA) AS units,
+                   SUM(v.VENTA_NETA_ASIGNADA_LINEA) AS sales,
+                   SUM(v.MARGEN_ESTIMADO_LINEA) AS margin
+            FROM V_LINEAS_FACTURADAS_ANALITICAS v
+            WHERE v.FECHA_INGRESO BETWEEN ? AND ?
+              AND v.CLIENTE = ?
+              AND UPPER(v.DESCRIPCION) NOT LIKE UPPER(?)
+            GROUP BY v.CODIGO_PT, v.DESCRIPCION
+            ORDER BY units DESC
+            """,
+            (limit, start_date, end_date, client_code, f"%{product_name}%"),
+        )
+        return {"top_customer": top_customer[0], "rows": rows}
