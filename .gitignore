@@ -4,3 +4,17 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 levantardb.txt
+
+# Python environments and local secrets
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Generated local integration workspace
+phase4_demo/
