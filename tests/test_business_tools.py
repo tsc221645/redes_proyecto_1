@@ -35,3 +35,14 @@ def test_product_performance_requires_product_or_line():
         tools.analyze_product_performance({"start_date": "2025-01-01", "end_date": "2025-01-31"})
     result = tools.analyze_product_performance({"start_date": "2025-01-01", "end_date": "2025-01-31", "line_code": "01"})
     assert result["rows"]
+
+
+def test_general_metrics_tool_restricts_dimensions_and_limit():
+    tools = BusinessTools(FakeRepository())
+    result = tools.query_business_metrics({
+        "start_date": "2025-01-01", "end_date": "2025-12-31",
+        "group_by": ["line"], "metrics": ["sales", "margin"], "limit": 10,
+    })
+    assert result["rows"]
+    with pytest.raises(ValueError):
+        tools.query_business_metrics({"start_date": "2025-01-01", "end_date": "2025-12-31", "group_by": ["sql"]})

@@ -16,6 +16,7 @@ class ChatOrchestrator:
         self.tools = dict(tools)
         self.tool_schemas = tool_schemas or []
         self.max_tool_rounds = max_tool_rounds
+        self.last_conversation: List[Dict[str, Any]] = []
 
     def run(self, messages: List[Dict[str, Any]], tool_schemas: List[Dict[str, Any]] | None = None) -> str:
         tool_schemas = self.tool_schemas if tool_schemas is None else tool_schemas
@@ -25,6 +26,8 @@ class ChatOrchestrator:
             message = self._message(response)
             tool_calls = self._value(message, "tool_calls", [])
             if not tool_calls:
+                conversation.append(message)
+                self.last_conversation = conversation
                 return self._value(message, "content", "") or ""
             conversation.append(message)
             for call in tool_calls:
