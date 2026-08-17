@@ -2,7 +2,8 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
-import { api, type ChatMessage } from './api'
+import { api, type ChatMessage, type Visualization } from './api'
+import ChartRenderer from './components/ChartRenderer.vue'
 
 const sessionId = ref('')
 const messages = ref<ChatMessage[]>([])
@@ -12,6 +13,7 @@ const connected = ref(false)
 const error = ref('')
 const server = ref<'local' | 'remote'>('local')
 const conversation = ref<HTMLElement | null>(null)
+const visualizations = ref<Record<number, Visualization>>({})
 
 const canSend = computed(() => draft.value.trim().length > 0 && !busy.value && Boolean(sessionId.value))
 
@@ -41,6 +43,7 @@ async function sendMessage() {
   try {
     const result = await api.sendMessage(sessionId.value, content)
     messages.value.push({ role: 'assistant', content: result.response })
+    if (result.visualization) visualizations.value[messages.value.length - 1] = result.visualization
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : 'No se pudo obtener una respuesta.'
   } finally {
@@ -86,7 +89,7 @@ onMounted(async () => {
       <header class="topbar"><div><span class="eyebrow">ANÁLISIS OPERATIVO</span><h1>¿Qué necesitas saber?</h1></div><div class="user-badge">AL<span>Directivo</span></div></header>
       <div ref="conversation" class="conversation">
         <div v-if="messages.length === 0" class="welcome"><div class="welcome-icon">✦</div><h2>Decisiones más claras,<br /><em>basadas en datos.</em></h2><p>Pregunta sobre ventas, productos, clientes, marcas o márgenes.</p><div class="suggestions"><button @click="draft = '¿Cuáles fueron las ventas mensuales de 2025?'">Ventas mensuales</button><button @click="draft = '¿Qué clientes compran más productos?'">Clientes principales</button><button @click="draft = '¿Qué productos tienen mejor margen?'">Mejores márgenes</button></div></div>
-        <article v-for="(message, index) in messages" :key="index" :class="['message-row', message.role]"><div class="avatar">{{ message.role === 'user' ? 'AL' : '✦' }}</div><div class="message-content"><span class="message-label">{{ message.role === 'user' ? 'TÚ' : 'EXECUTIVE INSIGHTS' }}</span><div v-if="message.role === 'assistant'" class="markdown-body" v-html="formatResponse(message.content)" /><p v-else>{{ message.content }}</p></div></article>
+        <article v-for="(message, index) in messages" :key="index" :class="['message-row', message.role]"><div class="avatar">{{ message.role === 'user' ? 'AL' : '✦' }}</div><div class="message-content"><span class="message-label">{{ message.role === 'user' ? 'TÚ' : 'EXECUTIVE INSIGHTS' }}</span><div v-if="message.role === 'assistant'" class="markdown-body" v-html="formatResponse(message.content)" /><p v-else>{{ message.content }}</p><ChartRenderer v-if="visualizations[index]" :visualization="visualizations[index]" /></div></article>
         <div v-if="busy" class="message-row assistant"><div class="avatar">✦</div><div class="message-content"><span class="message-label">EXECUTIVE INSIGHTS</span><p class="thinking">Analizando datos<span>.</span><span>.</span><span>.</span></p></div></div>
       </div>
       <div v-if="error" class="error-banner">{{ error }}</div>

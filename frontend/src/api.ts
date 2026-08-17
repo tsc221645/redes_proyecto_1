@@ -16,6 +16,7 @@ export interface ToolDefinition {
   description: string
   inputSchema: Record<string, unknown>
 }
+export interface Visualization { type: 'line' | 'bar'; title: string; labels: string[]; datasets: Array<{ label: string; data: Array<number | null> }> }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -35,7 +36,7 @@ export const api = {
   createSession: () => request<Session>('/api/chat/sessions', { method: 'POST' }),
   getSession: (id: string) => request<Session>(`/api/chat/sessions/${id}`),
   deleteSession: (id: string) => request<void>(`/api/chat/sessions/${id}`, { method: 'DELETE' }),
-  sendMessage: (id: string, content: string) => request<{ session_id: string; response: string }>(`/api/chat/sessions/${id}/messages`, {
+  sendMessage: (id: string, content: string) => request<{ session_id: string; response: string; visualization?: Visualization }>(`/api/chat/sessions/${id}/messages`, {
     method: 'POST', body: JSON.stringify({ content }),
   }),
   tools: () => request<ToolDefinition[]>('/api/mcp/tools'),

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from backend.business.mcp_runtime import create_business_mcp_client
 from backend.data_access.config import SQLAnywhereSettings
 from backend.llm.session_chat import create_session_manager
+from backend.llm.visualizations import build_visualization
 
 
 class SessionResponse(BaseModel):
@@ -25,6 +26,7 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     session_id: str
     response: str
+    visualization: Dict[str, Any] | None = None
 
 
 class ToolResponse(BaseModel):
@@ -74,7 +76,12 @@ def send_message(session_id: str, request: MessageRequest) -> MessageResponse:
     except (RuntimeError, ValueError) as exc:
         logger.exception("Chat request failed")
         raise HTTPException(status_code=502, detail="Chat provider or tool error") from exc
-    return MessageResponse(session_id=session_id, response=response)
+    visualization = None
+    for tool_result in session_manager.get(session_id).last_tool_results:
+        visualization = build_visualization(tool_result["name"], tool_result["result"])
+        if visualization:
+            break
+    return MessageResponse(session_id=session_id, response=response, visualization=visualization)
 
 
 @app.delete("/api/chat/sessions/{session_id}", status_code=204, response_class=Response)
