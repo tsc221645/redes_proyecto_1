@@ -12,7 +12,7 @@ from backend.data_access.repositories import SalesRepository
 
 
 def settings():
-    return SQLAnywhereSettings("127.0.0.1", 2638, "PRODIN", "PRODIN_V17", "reader", "secret", "SQL Anywhere 17")
+    return SQLAnywhereSettings("127.0.0.1", 2638, "TEST_SERVER", "TEST_DATABASE", "reader", "secret", "SQL Anywhere 17")
 
 
 def test_connection_string_contains_endpoint_and_credentials_for_driver():

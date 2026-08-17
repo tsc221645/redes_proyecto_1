@@ -68,7 +68,7 @@ The process waits for JSON-RPC messages on standard input. The chatbot launches 
 Terminal 1:
 
 ```powershell
-C:\Users\alambre1\anaconda3\envs\dm1\python.exe -m uvicorn backend.api.app:app --reload
+python -m uvicorn backend.api.app:app --reload
 ```
 
 Terminal 2:
