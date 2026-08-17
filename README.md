@@ -88,8 +88,8 @@ The local server supports `initialize`, `notifications/initialized`, `tools/list
 
 ```text
 What were the monthly sales during 2025?
-Which clients buy the most Car Kool Verde?
-What other products does the client who buys the most Insta Wax purchase?
+Which clients buy the most THIS PRODUCT?
+What other products does the client who buys the most PRODUCT purchase?
 Compare sales between 2024 and 2025.
 ```
 
