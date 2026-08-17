@@ -17,10 +17,12 @@ class ChatOrchestrator:
         self.tool_schemas = tool_schemas or []
         self.max_tool_rounds = max_tool_rounds
         self.last_conversation: List[Dict[str, Any]] = []
+        self.last_tool_results: List[Dict[str, Any]] = []
 
     def run(self, messages: List[Dict[str, Any]], tool_schemas: List[Dict[str, Any]] | None = None) -> str:
         tool_schemas = self.tool_schemas if tool_schemas is None else tool_schemas
         conversation = list(messages)
+        self.last_tool_results = []
         for _ in range(self.max_tool_rounds):
             response = self.provider.complete(conversation, tool_schemas)
             message = self._message(response)
@@ -45,6 +47,7 @@ class ChatOrchestrator:
                         result = {"error": str(exc)}
                         if os.getenv("LLM_DEBUG", "false").lower() == "true":
                             print(f"[LLM_DEBUG] tool_error={exc}", file=sys.stderr, flush=True)
+                self.last_tool_results.append({"name": name, "result": result})
                 conversation.append({
                     "role": "tool",
                     "tool_call_id": self._value(call, "id", ""),

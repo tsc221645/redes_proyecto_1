@@ -27,6 +27,10 @@ class ChatSession:
     def clear(self) -> None:
         self.messages.clear()
 
+    @property
+    def last_tool_results(self) -> List[dict]:
+        return getattr(self.orchestrator, "last_tool_results", [])
+
 
 class SessionManager:
     """In-memory session store for the local academic prototype."""

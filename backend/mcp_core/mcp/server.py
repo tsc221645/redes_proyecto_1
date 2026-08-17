@@ -57,7 +57,11 @@ class MCPServer:
             if tool.handler is None:
                 raise RuntimeError(f"Tool has no handler: {tool.name}")
             result = tool.handler(arguments)
-            return self._success(request_id, {"content": [{"type": "text", "text": result}]})
+            text_result = result if isinstance(result, str) else __import__("json").dumps(result, ensure_ascii=False, default=str)
+            payload = {"content": [{"type": "text", "text": text_result}]}
+            if isinstance(result, dict):
+                payload["structuredContent"] = result
+            return self._success(request_id, payload)
         except ValueError as exc:
             return self._error(request_id, INVALID_PARAMS, str(exc))
         except Exception:
