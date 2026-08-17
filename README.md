@@ -33,12 +33,12 @@ Copy `.env.example` to `.env` and set local values:
 
 ```env
 SQLANYWHERE_HOST=127.0.0.1
-SQLANYWHERE_PORT=2638
-SQLANYWHERE_SERVER=prodin_v17
+SQLANYWHERE_PORT=
+SQLANYWHERE_SERVER=
 SQLANYWHERE_DATABASE=
 SQLANYWHERE_USER=readonly_user
 SQLANYWHERE_PASSWORD=your_password
-SQLANYWHERE_DRIVER=SQL Anywhere 17
+SQLANYWHERE_DRIVER=
 SQLANYWHERE_READ_ONLY=true
 LLM_MODEL=openai/gpt-4o-mini
 OPENAI_API_KEY=your_api_key
@@ -50,10 +50,10 @@ Never commit `.env`, passwords, API keys, the complete database, or generated lo
 ## Start SQL Anywhere
 
 ```powershell
-& "C:\Program Files\SQL Anywhere 17\Bin64\dbsrv17.exe" -n PRODIN -x "tcpip(port=2638)" "C:\path\to\PRODIN_V17.DB"
+& "C:\Program Files\SQL Anywhere 17\Bin64\dbsrv17.exe" -n NOMBRE_DB -x "tcpip(port=PUERTO)" "C:\path\to\NOMBRE_DB.DB"
 ```
 
-Confirm that port `2638` is listening before starting the chatbot.
+Confirm that port `NUMERO PUERTO` is listening before starting the chatbot.
 
 ## Run the standalone MCP server
 
@@ -88,8 +88,8 @@ The local server supports `initialize`, `notifications/initialized`, `tools/list
 
 ```text
 What were the monthly sales during 2025?
-Which clients buy the most Car Kool Verde?
-What other products does the client who buys the most Insta Wax purchase?
+Which clients buy the most THIS PRODUCT?
+What other products does the client who buys the most PRODUCT purchase?
 Compare sales between 2024 and 2025.
 ```
 
