@@ -1,7 +1,7 @@
 # Phase 5: SQL Anywhere data model
 
-The local source is SQL Anywhere 17, exposed through the `PRODIN` server on
-TCP port `2638`. Python must connect through the installed 64-bit ODBC driver
+The local source is SQL Anywhere 17, exposed through a configured server on
+the configured TCP port. Python must connect through the installed 64-bit ODBC driver
 `SQL Anywhere 17` and a read-only database user.
 
 ## Business scope
