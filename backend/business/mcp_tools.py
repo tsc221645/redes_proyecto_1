@@ -7,9 +7,13 @@ from backend.mcp_core.mcp.types import MCPTool
 from .tools import BusinessTools
 
 
-def create_business_mcp_tools(settings: SQLAnywhereSettings) -> list[MCPTool]:
+def create_business_mcp_tools(settings: SQLAnywhereSettings | None = None, repository: SalesRepository | None = None) -> list[MCPTool]:
     """Create the first three database-backed MCP tools."""
-    use_cases = BusinessTools(SalesRepository(SQLAnywhereConnection(settings)))
+    if repository is None:
+        if settings is None:
+            raise ValueError("settings or repository is required")
+        repository = SalesRepository(SQLAnywhereConnection(settings))
+    use_cases = BusinessTools(repository)
     return [
         MCPTool("get_customer_product_mix", "Find the customer who buys the most of a product, then list that customer's other products.", {"type": "object", "required": ["start_date", "end_date", "product_name"], "properties": {"start_date": {"type": "string", "format": "date"}, "end_date": {"type": "string", "format": "date"}, "product_name": {"type": "string"}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}}}, use_cases.get_customer_product_mix),
         MCPTool("query_business_metrics", "Answer a bounded business analytics question. Use product_name for a product description and product_code only for an actual product code. For questions about which clients buy a product, set group_by to ['client'] and product_name to the description.", {"type": "object", "required": ["start_date", "end_date"], "properties": {"start_date": {"type": "string", "format": "date"}, "end_date": {"type": "string", "format": "date"}, "group_by": {"type": "array", "items": {"type": "string", "enum": ["year", "month", "product_code", "product_name", "brand", "line", "country", "client", "currency"]}}, "metrics": {"type": "array", "items": {"type": "string", "enum": ["sales", "gross_sales", "cost", "margin", "units", "invoice_count", "line_count"]}}, "product_name": {"type": "string"}, "product_code": {"type": "string"}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}, "order_by": {"type": "string"}}}, use_cases.query_business_metrics),
