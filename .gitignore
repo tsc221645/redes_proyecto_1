@@ -19,3 +19,4 @@ frontend/.vite/
 # Generated local integration workspace
 phase4_demo/
 logs/
+output/

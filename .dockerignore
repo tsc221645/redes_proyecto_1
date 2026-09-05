@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+!.env.remote.example
+frontend/node_modules
+frontend/dist
+logs
+output
+phase4_demo
+__pycache__
+*.py[cod]
+tests
+*.db
+*.DB
