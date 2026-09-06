@@ -18,13 +18,14 @@ def load(input_path: Path, database_url: str) -> int:
                 cursor.execute(
                     """INSERT INTO v_lineas_facturadas_analiticas
                     (cliente, nombre_cliente, codigo_pt, descripcion, marca, nombre_marca,
-                     linea, pais, moneda, anio, mes, venta_neta_asignada_linea,
+                     linea, pais, moneda, fecha_ingreso, anio, mes, venta_neta_asignada_linea,
                      venta_bruta_linea, costo_estimado_linea, margen_estimado_linea,
                      cantidad_convertida)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (row.get("client_code"), row.get("client_name"), row.get("product_code"),
                      row.get("product_name"), row.get("brand_code"), row.get("brand_name"),
                      row.get("line_code"), row.get("country_code"), row.get("currency"),
+                     row.get("fecha_ingreso"),
                      row.get("year"), row.get("month"), row.get("sales"), row.get("gross_sales"),
                      row.get("cost"), row.get("margin"), row.get("units")),
                 )

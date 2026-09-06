@@ -1,5 +1,6 @@
 *.env
 .env
+.env.remote
 __pycache__/
 *.py[cod]
 .pytest_cache/
