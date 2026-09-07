@@ -22,6 +22,7 @@ APPROVED_FIELDS = {
     "line_code": "line",
     "country_code": "country",
     "currency": None,
+    "fecha_ingreso": None,
     "year": None,
     "month": None,
     "sales": None,
@@ -43,6 +44,7 @@ def export(start_date: str, end_date: str, output: Path, salt: str) -> int:
                v.LINEA AS line_code,
                v.PAIS AS country_code,
                v.MONEDA AS currency,
+               v.FECHA_INGRESO AS fecha_ingreso,
                v.ANIO AS year,
                v.MES AS month,
                SUM(v.VENTA_NETA_ASIGNADA_LINEA) AS sales,
@@ -55,7 +57,7 @@ def export(start_date: str, end_date: str, output: Path, salt: str) -> int:
         LEFT JOIN PT_CLIENTES pc ON v.CLIENTE = pc.CLIENTE
         WHERE v.FECHA_INGRESO BETWEEN ? AND ?
         GROUP BY v.CLIENTE, pc.NOMBRE_CLIENTE, v.CODIGO_PT, v.DESCRIPCION,
-                 v.MARCA, pm.NOMBRE, v.LINEA, v.PAIS, v.MONEDA, v.ANIO, v.MES
+                 v.MARCA, pm.NOMBRE, v.LINEA, v.PAIS, v.MONEDA, v.FECHA_INGRESO, v.ANIO, v.MES
         ORDER BY v.ANIO, v.MES
     """
     settings = SQLAnywhereSettings.from_env()
