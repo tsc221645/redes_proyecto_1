@@ -29,13 +29,15 @@ def run() -> None:
             response = server.handle(request)
             audit.record(direction="request", message=request, duration_ms=monotonic_ms() - started)
             if response is not None:
-                sys.stdout.write(json.dumps(response, ensure_ascii=False, default=str) + "\n")
+                # Escape Unicode on the protocol stream so Windows code pages
+                # cannot corrupt JSON-RPC stdout.
+                sys.stdout.write(json.dumps(response, ensure_ascii=True, default=str) + "\n")
                 sys.stdout.flush()
                 audit.record(direction="response", message=response, duration_ms=monotonic_ms() - started, error=response.get("error", {}).get("message") if response.get("error") else None)
         except Exception as exc:
             audit.record(direction="request", message=request, duration_ms=monotonic_ms() - started, error=str(exc))
             response = {"jsonrpc": "2.0", "id": request.get("id"), "error": {"code": -32603, "message": "Internal server error"}}
-            sys.stdout.write(json.dumps(response) + "\n")
+            sys.stdout.write(json.dumps(response, ensure_ascii=True) + "\n")
             sys.stdout.flush()
             print(f"business MCP server error: {exc}", file=sys.stderr, flush=True)
 

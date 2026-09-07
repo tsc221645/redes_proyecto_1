@@ -134,6 +134,9 @@ not recorded.
 - `Missing API key`: set the provider-specific key named in `.env`.
 - `stdio server is not running`: verify SQL Anywhere credentials and that
   `python -m backend.business.server` starts without errors.
+- `UnicodeDecodeError` in `stdio_client.py`: restart the API after pulling the
+  current version; stdio JSON-RPC now escapes non-ASCII characters to remain
+  compatible with Windows code pages.
 - `npx`/`uvx` errors: install Node.js/npm and `uv`, then verify `npm --version`
   and `uvx --version`.
 - `Remote MCP authentication is not configured`: set a non-empty
