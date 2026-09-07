@@ -21,7 +21,7 @@ def run() -> None:
                 raise ValueError("message must be an object")
             response = server.handle(message)
             if response is not None:
-                sys.stdout.write(json.dumps(response, ensure_ascii=False) + "\n")
+                sys.stdout.write(json.dumps(response, ensure_ascii=True) + "\n")
                 sys.stdout.flush()
         except (json.JSONDecodeError, ValueError) as exc:
             response: Dict[str, Any] = {
@@ -29,7 +29,7 @@ def run() -> None:
                 "id": None,
                 "error": {"code": -32700, "message": f"Parse error: {exc}"},
             }
-            sys.stdout.write(json.dumps(response) + "\n")
+            sys.stdout.write(json.dumps(response, ensure_ascii=True) + "\n")
             sys.stdout.flush()
         except Exception as exc:  # Keep protocol output valid if the process hits an unexpected error.
             print(f"stdio server error: {exc}", file=sys.stderr, flush=True)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Protocol
 
-from backend.mcp_core.jsonrpc import generate_id
+from backend.mcp_core.jsonrpc import generate_id, validate_response
 from backend.mcp_core.audit import JSONRPCAuditLogger, monotonic_ms
 
 
@@ -51,7 +51,11 @@ class MCPClient:
             self.audit.record(direction="client_error", message=message, duration_ms=monotonic_ms() - started, error=error, server=self.server_name, transport=type(self.transport).__name__)
             raise RuntimeError(error)
         self.audit.record(direction="server_to_client", message=response, duration_ms=monotonic_ms() - started, error=response.get("error", {}).get("message") if response.get("error") else None, server=self.server_name, transport=type(self.transport).__name__)
-        if response.get("jsonrpc") != "2.0" or response.get("id") != message["id"] or ("result" not in response and "error" not in response):
+        try:
+            validate_response(response)
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
+        if response["id"] != message["id"]:
             raise RuntimeError(f"Invalid or mismatched JSON-RPC response for {method}")
         if "error" in response:
             raise RuntimeError(response["error"]["message"])

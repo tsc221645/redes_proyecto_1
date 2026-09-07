@@ -24,11 +24,12 @@ class JSONRPCResponse(BaseModel):
     error: Optional[JSONRPCErrorObject] = None
 
     def validate(self) -> None:
-        """Lightweight validation: ensure response contains result xor error."""
-        if self.result is None and self.error is None:
+        """Validate result/error exclusivity, including a valid null result."""
+        fields = getattr(self, "__fields_set__", set())
+        has_result = "result" in fields
+        has_error = "error" in fields
+        if has_result == has_error:
             raise ValueError("Response must contain either 'result' or 'error'")
-        if self.result is not None and self.error is not None:
-            raise ValueError("Response must not contain both 'result' and 'error'")
 
 
 class JSONRPCNotification(JSONRPCRequest):

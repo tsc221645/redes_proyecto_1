@@ -9,6 +9,7 @@ from backend.mcp_core.jsonrpc import (
     INVALID_PARAMS,
     METHOD_NOT_FOUND,
     make_error_object,
+    validate_request,
 )
 from .types import MCPTool, ServerCapabilities, ServerInfo
 
@@ -23,14 +24,14 @@ class MCPServer:
 
     def handle(self, message: Dict[str, Any]) -> Dict[str, Any] | None:
         """Process one JSON-RPC message and return its response, if any."""
-        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
+        if not isinstance(message, dict):
             return self._error(None, -32600, "Invalid Request")
+        try:
+            validate_request(message)
+        except ValueError:
+            return self._error(message.get("id"), -32600, "Invalid Request")
         request_id = message.get("id")
         method = message.get("method")
-        if not isinstance(method, str):
-            return self._error(request_id, -32600, "Invalid Request")
-        if "id" in message and (isinstance(request_id, bool) or not isinstance(request_id, (int, str))):
-            return self._error(None, -32600, "Invalid Request")
 
         if method == "notifications/initialized":
             return None

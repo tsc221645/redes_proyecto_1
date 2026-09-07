@@ -13,7 +13,43 @@ Cumplimiento estimado: **80%**. Es una evaluación estática. La compilación fu
 exitosa, pero la suite no pudo ejecutarse porque el intérprete actual no tiene
 `pytest` ni `pydantic` instalados.
 
-## 2. Checklist general
+## 2. Checklist actualizada
+
+Cumplimiento actualizado despues de los cambios: **88%**.
+
+La siguiente matriz reemplaza la clasificación anterior después de implementar
+los pendientes. Wireshark se mantiene como única excepción explícita.
+
+| ID | Requisito | Estado actual | Evidencia | Prioridad |
+|---|---|---|---|---|
+| A1 | Conexion con LLM externo | IMPLEMENTADO | `backend/llm/provider.py`, `LiteLLMProvider.complete()`, validacion de API key | MEDIA |
+| A2 | Contexto por sesion | COMPLETO | `backend/llm/sessions.py`, historial UUID y limpieza | MEDIA |
+| A3 | Logging MCP | COMPLETO | `audit.py`, `client.py`, servidores local/remoto y oficiales | MEDIA |
+| B1 | Filesystem MCP oficial | IMPLEMENTADO | `MCPClientPool`, descubrimiento y routing; requiere npm instalado | MEDIA |
+| B2 | Git MCP oficial | IMPLEMENTADO | `MCPClientPool`, inicializacion y routing; requiere uvx instalado | MEDIA |
+| C | Servidor MCP propio local | COMPLETO | `business/server.py`, `mcp_tools.py`, `mcp/server.py` | MEDIA |
+| D | Servidor MCP remoto | IMPLEMENTADO | Docker, PostgreSQL, auth obligatoria, TLS y `run_remote.py` | MEDIA |
+| E | MCP manual | COMPLETO | `backend/mcp_core/mcp` y `jsonrpc`; sin SDK MCP | MEDIA |
+| F | JSON-RPC 2.0 | IMPLEMENTADO | Validacion de requests/responses, errores, notifications e IDs | MEDIA |
+| G | Flujo end-to-end | IMPLEMENTADO EN CODIGO | Host, LLM, MCP Client, tools y DB conectados; falta ejecucion real | ALTA |
+| H | Arquitectura documentada | COMPLETO | `README.md`, `flujos.md`, `docs/ARCHITECTURE.md` | BAJA |
+| I | Diagramas Mermaid | COMPLETO | `informe_final.md`, `docs/ARCHITECTURE.md`, `docs/NETWORK.md` | BAJA |
+| J | Arquitectura de red | COMPLETO EN DOCUMENTACION | `docs/NETWORK.md`, puertos y transportes documentados | BAJA |
+| K | Wireshark | EXCLUIDO | No se implementa por solicitud del usuario | — |
+| L | README | COMPLETO | Instalacion, uso, tools, remote, TLS y troubleshooting | BAJA |
+| M | Codigo y seguridad | IMPLEMENTADO | SQL parametrizado, anonimización, auth, read-only y TLS | MEDIA |
+| N | Git | COMPLETO | 23 commits, ramas por fases y desarrollo gradual | BAJA |
+| O | Testing | IMPLEMENTADO EN CODIGO | Tests JSON-RPC, MCP, auditoria y seguridad; falta ejecutar por dependencias | ALTA |
+| P | Dependencias MCP | COMPLETO | No hay SDK MCP prohibido; runtimes externos documentados | BAJA |
+| Q | Entregables | PARCIAL | Codigo, docs y deployment listos; faltan pruebas reales y presentacion | MEDIA |
+
+### Estado de ejecucion
+
+La implementacion fue compilada correctamente. La suite no pudo ejecutarse
+porque el entorno actual no tiene `pytest` ni `pydantic`. Esto es una
+limitacion del entorno, no un fallo de sintaxis del proyecto.
+
+## 2.1. Checklist historica
 
 | ID | Requisito | Estado | Evidencia | Prioridad |
 |---|---|---|---|---|
@@ -298,3 +334,25 @@ Verificado en esta revisión:
 - [ ] Agregar carpetas `evidence/wireshark/`, `report/` y
   `presentation/`.
 
+## Addendum: resultado posterior a la implementacion
+
+Los pendientes parciales de codigo fueron implementados en esta revision:
+
+- Logging bidireccional en `MCPClient`, con servidor, transporte, metodo, ID,
+  parametros seguros, duracion y errores.
+- Integracion del `MCPClientPool` para Filesystem y Git dentro del mismo flujo
+  de tools del LLM. Se activa con `MCP_OFFICIAL_SERVERS=filesystem,git`.
+- Validacion de requests y responses JSON-RPC, version, tipos de ID,
+  exclusividad `result`/`error` y correlacion de IDs.
+- Autenticacion remota obligatoria por defecto.
+- Soporte TLS de Uvicorn con certificados configurables.
+- El cliente puede rechazar URLs remotas HTTP con `MCP_REQUIRE_TLS=true`.
+- La conexion PostgreSQL activa `default_transaction_read_only` como defensa
+  adicional.
+- Se agregaron documentacion de arquitectura, documentacion de red,
+  troubleshooting y pruebas para seguridad, auditoria y JSON-RPC.
+
+Solo permanecen pendientes la ejecucion real contra servicios externos, la
+validacion de certificados en un deployment real, la ejecucion de la suite en
+un entorno con dependencias instaladas y la evidencia Wireshark, que fue
+explicitamente excluida de la implementacion.

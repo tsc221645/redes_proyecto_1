@@ -20,6 +20,10 @@ class PostgresRepository:
             raise RuntimeError("psycopg is required for the PostgreSQL remote repository") from exc
         connection = psycopg.connect(self.database_url, autocommit=True)
         try:
+            # Defense in depth: analytical MCP connections cannot write even if
+            # the configured database role has more privileges than intended.
+            with connection.cursor() as cursor:
+                cursor.execute("SET default_transaction_read_only = on")
             yield connection
         finally:
             connection.close()

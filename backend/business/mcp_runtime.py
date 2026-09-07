@@ -29,11 +29,20 @@ class MCPClientPool:
             for tool in client.list_tools()["tools"]
         }
 
+    def list_tools(self) -> dict[str, Any]:
+        return {"tools": list(self.definitions)}
+
     def call_tool(self, name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         server_name = self._owners.get(name)
         if server_name is None:
             raise RuntimeError(f"Tool not found: {name}")
         return self.clients[server_name].call_tool(name, arguments)
+
+    def close(self) -> None:
+        for client in self.clients.values():
+            transport = getattr(client, "transport", None)
+            if transport is not None and hasattr(transport, "close"):
+                transport.close()
 
 
 def create_business_mcp_client(settings: SQLAnywhereSettings) -> tuple[MCPClient | MCPClientPool, list[dict[str, Any]]]:

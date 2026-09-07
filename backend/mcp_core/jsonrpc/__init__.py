@@ -11,7 +11,7 @@ from .errors import (
     INTERNAL_ERROR,
     make_error_object,
 )
-from .utils import generate_id, parse_message, serialize_message
+from .utils import generate_id, parse_message, serialize_message, validate_request, validate_response
 
 __all__ = [
     "JSONRPCRequest",
@@ -27,4 +27,6 @@ __all__ = [
     "generate_id",
     "parse_message",
     "serialize_message",
+    "validate_request",
+    "validate_response",
 ]

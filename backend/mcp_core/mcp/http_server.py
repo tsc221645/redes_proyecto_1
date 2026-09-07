@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Any, Dict
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Response
 
 from backend.data_access.config import SQLAnywhereSettings
 from backend.mcp_core.audit import JSONRPCAuditLogger, monotonic_ms
@@ -16,20 +16,23 @@ def create_http_mcp_app(server: MCPServer | None = None) -> FastAPI:
     mcp_server = server or _build_business_server()
     audit = JSONRPCAuditLogger()
     expected_token = os.getenv("MCP_REMOTE_TOKEN", "")
+    require_auth = os.getenv("MCP_REMOTE_AUTH_REQUIRED", "true").lower() == "true"
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "service": "mcp"}
 
     @app.post("/mcp")
-    def mcp_endpoint(message: Dict[str, Any], authorization: str | None = Header(default=None)) -> Dict[str, Any]:
-        if expected_token and authorization != f"Bearer {expected_token}":
+    def mcp_endpoint(message: Dict[str, Any], authorization: str | None = Header(default=None)) -> Dict[str, Any] | Response:
+        if require_auth and not expected_token:
+            raise HTTPException(status_code=503, detail="Remote MCP authentication is not configured")
+        if authorization != f"Bearer {expected_token}":
             raise HTTPException(status_code=401, detail="Invalid MCP token")
         started = monotonic_ms()
         response = mcp_server.handle(message)
         audit.record(direction="request", message=message, duration_ms=monotonic_ms() - started)
         if response is None:
-            return {"jsonrpc": "2.0", "result": None}
+            return Response(status_code=204)
         audit.record(
             direction="response",
             message=response,
