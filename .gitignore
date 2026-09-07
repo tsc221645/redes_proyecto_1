@@ -1,4 +1,5 @@
 *.env
+certs/
 .env
 .env.remote
 __pycache__/
