@@ -80,6 +80,9 @@ PostgreSQL loading, Docker deployment, Compute Engine setup, and MCP tests.
 For HTTPS deployment, mount certificates under `certs/` and configure
 `MCP_TLS_CERTFILE`, `MCP_TLS_KEYFILE`, and `MCP_TLS_REQUIRED=true` in
 `.env.remote`. The remote client can enforce HTTPS with `MCP_REQUIRE_TLS=true`.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
+[docs/NETWORK.md](docs/NETWORK.md) for the complete component and network
+diagrams.
 
 ## Official Filesystem and Git servers
 
@@ -95,6 +98,9 @@ The workspace is the Filesystem security boundary. Git initialization is done
 once locally because the official Git server requires an existing repository;
 file writes, staging, and commits are then performed through MCP tools. See
 `docs/PHASE_4.md` for the reproducible scenario and runtime requirements.
+
+If either external runtime is unavailable, the API reports the startup error;
+install and verify them before enabling the corresponding server.
 
 ## MCP protocol and tools
 
@@ -122,6 +128,20 @@ Audit events are written to `logs/mcp_audit.jsonl` by default. They contain
 timestamps, direction, method, tool, safe parameters, duration, and errors.
 Passwords, tokens, connection strings, and complete business result sets are
 not recorded.
+
+## Troubleshooting
+
+- `Missing API key`: set the provider-specific key named in `.env`.
+- `stdio server is not running`: verify SQL Anywhere credentials and that
+  `python -m backend.business.server` starts without errors.
+- `npx`/`uvx` errors: install Node.js/npm and `uv`, then verify `npm --version`
+  and `uvx --version`.
+- `Remote MCP authentication is not configured`: set a non-empty
+  `MCP_REMOTE_TOKEN` in `.env.remote`.
+- TLS startup failure: verify both certificate files exist at the paths in
+  `MCP_TLS_CERTFILE` and `MCP_TLS_KEYFILE`.
+- Tests cannot import modules: run `python -m pip install -r requirements.txt`
+  inside the active environment.
 
 ## Repository layout
 

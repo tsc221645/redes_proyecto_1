@@ -53,3 +53,25 @@ def test_invalid_tool_arguments_return_jsonrpc_error():
 def test_unknown_method_returns_jsonrpc_error():
     response = InMemoryTransport().server.handle({"jsonrpc": "2.0", "id": 1, "method": "unknown"})
     assert response["error"]["code"] == -32601
+
+
+def test_server_rejects_invalid_jsonrpc_version():
+    response = InMemoryTransport().server.handle({"jsonrpc": "1.0", "id": 1, "method": "tools/list"})
+    assert response["error"]["code"] == -32600
+
+
+def test_notification_has_no_response():
+    response = InMemoryTransport().server.handle({"jsonrpc": "2.0", "method": "unknown"})
+    assert response is None
+
+
+def test_client_rejects_mismatched_response_id():
+    class BadTransport:
+        def send(self, message):
+            if "id" not in message:
+                return None
+            return {"jsonrpc": "2.0", "id": "different", "result": {}}
+
+    client = MCPClient(BadTransport())
+    with pytest.raises(RuntimeError, match="mismatched"):
+        client.list_tools()

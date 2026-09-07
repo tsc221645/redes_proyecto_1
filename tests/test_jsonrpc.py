@@ -61,3 +61,10 @@ def test_make_error_object():
     err = make_error_object(-32601, "Not found", {"method": "x"})
     assert err["code"] == -32601
     assert err["message"] == "Not found"
+
+
+def test_parse_rejects_invalid_request_shape_and_nonexclusive_response():
+    with pytest.raises(ValueError):
+        parse_message(json.dumps({"jsonrpc": "2.0", "method": "x", "id": None}))
+    with pytest.raises(ValueError):
+        parse_message(json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}, "error": {"code": 1, "message": "x"}}))
