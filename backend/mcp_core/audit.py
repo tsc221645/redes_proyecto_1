@@ -14,11 +14,13 @@ class JSONRPCAuditLogger:
     def __init__(self, path: str | None = None) -> None:
         self.path = Path(path or os.getenv("MCP_AUDIT_LOG", "logs/mcp_audit.jsonl"))
 
-    def record(self, *, direction: str, message: Dict[str, Any], duration_ms: float | None = None, error: str | None = None) -> None:
+    def record(self, *, direction: str, message: Dict[str, Any], duration_ms: float | None = None, error: str | None = None, server: str | None = None, transport: str | None = None) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         event = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "direction": direction,
+            "server": server,
+            "transport": transport,
             "jsonrpc_id": message.get("id"),
             "method": message.get("method"),
             "tool": self._tool_name(message),

@@ -24,11 +24,14 @@ services:
       - .env.remote
     ports:
       - "8080:8080"
+    # Mount a certificate directory and set MCP_TLS_* for HTTPS in deployment.
+    volumes:
+      - ./certs:/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      test: ["CMD", "python", "-c", "import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:8080/health', context=ssl._create_unverified_context())"]
       interval: 30s
       timeout: 5s
       retries: 3

@@ -1,25 +1,46 @@
-# Executive Insights — Local MCP Server
+# Executive Insights
 
-Executive Insights is an academic business chatbot for querying sales data in SAP SQL Anywhere 17. It uses manually implemented JSON-RPC 2.0 and MCP, LiteLLM, a standalone local business MCP server, and a Vue web interface.
+Executive Insights is an academic business analytics chatbot. It combines a
+Vue interface, a FastAPI host, LiteLLM, and a manually implemented JSON-RPC 2.0
+and Model Context Protocol (MCP) layer. The application answers controlled
+business questions using sales data without allowing the language model to
+submit arbitrary SQL.
+
+## Features
+
+- Natural-language sales analysis in Spanish or English.
+- Local MCP server over newline-delimited stdio.
+- Remote MCP server over HTTP.
+- Optional integration of the official Filesystem and Git MCP servers into the
+  same chatbot tool catalog.
+- LiteLLM provider abstraction for switching LLM providers.
+- SQL Anywhere 17 access for local development.
+- PostgreSQL dataset for remote deployment.
+- Stable anonymization of clients, products, brands, lines, countries, and invoices.
+- Business tools for summaries, period comparisons, product performance, metrics, and customer product mix.
+- JSON-RPC audit logging with secrets and full result sets excluded.
+- Vue chat interface with Markdown responses and optional charts.
+- Automated tests for JSON-RPC, MCP, data access, orchestration, API, sessions, and anonymization.
 
 ## Architecture
 
 ```text
-Vue 3 UI → FastAPI host → LiteLLM → manual MCP client / stdio → business-mcp-server → ODBC read-only → SQL Anywhere 17
+Local:  Vue -> FastAPI -> LiteLLM -> MCP stdio -> SQL Anywhere
+Remote: Client/API -> HTTP JSON-RPC -> MCP Docker -> PostgreSQL anonymized dataset
 ```
-
-The business server is an independent process. It reads newline-delimited JSON-RPC messages from standard input and writes responses to standard output. Logs use standard error and an audit JSONL file.
 
 ## Requirements
 
-- Windows with Python 3.12+ and Conda environment `dm1`.
-- SQL Anywhere 17 and the 64-bit `SQL Anywhere 17` ODBC driver.
+- Python 3.12+ (Conda environment is recommended).
 - Node.js 18+.
-- An API key for a LiteLLM-supported provider.
+- For local mode: SQL Anywhere 17 and its 64-bit ODBC driver.
+- An API key for the selected LiteLLM provider.
+- For remote mode: Docker and Docker Compose.
 
-## Installation
+## Local installation
 
 ```powershell
+conda create -n dm1 python=3.12
 conda activate dm1
 python -m pip install -r requirements.txt
 cd frontend
@@ -27,93 +48,92 @@ npm.cmd install
 cd ..
 ```
 
-## Configuration
+Copy `.env.example` to `.env` and set the SQL Anywhere and LLM values. Never
+commit `.env`, database files, credentials, API keys, or generated logs.
 
-Copy `.env.example` to `.env` and set local values:
+## Local usage
 
-```env
-SQLANYWHERE_HOST=127.0.0.1
-SQLANYWHERE_PORT=
-SQLANYWHERE_SERVER=
-SQLANYWHERE_DATABASE=
-SQLANYWHERE_USER=readonly_user
-SQLANYWHERE_PASSWORD=your_password
-SQLANYWHERE_DRIVER=
-SQLANYWHERE_READ_ONLY=true
-LLM_MODEL=openai/gpt-4o-mini
-OPENAI_API_KEY=your_api_key
-MCP_AUDIT_LOG=logs/mcp_audit.jsonl
-```
-
-Never commit `.env`, passwords, API keys, the complete database, or generated logs.
-
-## Start SQL Anywhere
+Start SQL Anywhere separately, then run the API:
 
 ```powershell
-& "C:\Program Files\SQL Anywhere 17\Bin64\dbsrv17.exe" -n NOMBRE_DB -x "tcpip(port=PUERTO)" "C:\path\to\NOMBRE_DB.DB"
-```
-
-Confirm that port `NUMERO PUERTO` is listening before starting the chatbot.
-
-## Run the standalone MCP server
-
-```powershell
-python -m backend.business.server
-```
-
-The process waits for JSON-RPC messages on standard input. The chatbot launches it automatically through the manual MCP stdio client.
-
-## Run the chatbot
-
-Terminal 1:
-
-```powershell
+conda activate dm1
 python -m uvicorn backend.api.app:app --reload
 ```
 
-Terminal 2:
+In another terminal:
 
 ```powershell
 cd frontend
 npm.cmd run dev
 ```
 
-Open `http://localhost:5173`. API documentation is available at `http://127.0.0.1:8000/docs`.
+Open `http://localhost:5173`. The API documentation is available at
+`http://127.0.0.1:8000/docs`. The API starts the local business MCP process
+automatically. `levantar_proyecto.bat` starts the API and frontend when the
+database is already running.
 
-## MCP specification
+## Remote usage
 
-The local server supports `initialize`, `notifications/initialized`, `tools/list`, and `tools/call`. Current business tools include `query_business_metrics`, `get_sales_summary`, `compare_periods`, `analyze_product_performance`, and `get_customer_product_mix`. Arguments are validated and SQL is owned by the repository layer; the LLM never sends SQL.
+Follow [docs/REMOTE_MCP.md](docs/REMOTE_MCP.md). It describes anonymized export,
+PostgreSQL loading, Docker deployment, Compute Engine setup, and MCP tests.
 
-## Examples
+For HTTPS deployment, mount certificates under `certs/` and configure
+`MCP_TLS_CERTFILE`, `MCP_TLS_KEYFILE`, and `MCP_TLS_REQUIRED=true` in
+`.env.remote`. The remote client can enforce HTTPS with `MCP_REQUIRE_TLS=true`.
 
-```text
-What were the monthly sales during 2025?
-Which clients buy the most THIS PRODUCT?
-What other products does the client who buys the most PRODUCT purchase?
-Compare sales between 2024 and 2025.
+## Official Filesystem and Git servers
+
+The chatbot can include tools discovered from the official servers in its same
+LLM/MCP tool catalog. Install Node.js/npm and `uvx`, then set:
+
+```env
+MCP_OFFICIAL_SERVERS=filesystem,git
+MCP_OFFICIAL_WORKSPACE=phase4_demo
 ```
 
-The local interface may show real names. A future remote deployment must use a reduced and anonymized dataset.
+The workspace is the Filesystem security boundary. Git initialization is done
+once locally because the official Git server requires an existing repository;
+file writes, staging, and commits are then performed through MCP tools. See
+`docs/PHASE_4.md` for the reproducible scenario and runtime requirements.
+
+## MCP protocol and tools
+
+The servers implement `initialize`, `notifications/initialized`, `tools/list`,
+and `tools/call`. Current tools are `query_business_metrics`,
+`get_sales_summary`, `compare_periods`, `analyze_product_performance`, and
+`get_customer_product_mix`. Tool schemas validate arguments; SQL remains in
+the repository and the LLM never receives a SQL execution tool.
+
+## Testing and code quality
+
+```powershell
+conda activate dm1
+python -m pytest -q
+python -m compileall -q backend scripts
+```
+
+The code uses typed Python modules, small repository/use-case boundaries,
+parameterized queries, explicit error handling, and docstrings for public
+components. Generated files are excluded through `.gitignore`.
 
 ## Audit logs
 
-The server writes JSON Lines events to `logs/mcp_audit.jsonl` by default. Events include timestamps, direction, JSON-RPC ID, method, tool, safe parameters, duration, and errors. Passwords, tokens, connection strings, and complete business result sets are excluded.
+Audit events are written to `logs/mcp_audit.jsonl` by default. They contain
+timestamps, direction, method, tool, safe parameters, duration, and errors.
+Passwords, tokens, connection strings, and complete business result sets are
+not recorded.
 
-## Testing
-
-```powershell
-python -m pytest -q
-```
-
-## Structure
+## Repository layout
 
 ```text
-backend/mcp_core/       Manual JSON-RPC, MCP, stdio and audit code
-backend/business/       Business MCP server and use cases
-backend/data_access/    SQL Anywhere ODBC and repositories
-backend/llm/            LiteLLM, orchestration, sessions and visualizations
+backend/mcp_core/       Manual JSON-RPC, MCP, transports, and audit logging
+backend/business/       Business tools and local/remote MCP entry points
+backend/data_access/    SQL Anywhere and PostgreSQL repositories
+backend/llm/            LiteLLM provider, orchestration, sessions, charts
 backend/api/            FastAPI application
-frontend/               Vue 3 + Vite interface
-tests/                  Unit and integration tests
-docs/                   Protocol, data model and tool documentation
+database/               Remote PostgreSQL schema
+scripts/                Anonymization, export, and PostgreSQL loading tools
+frontend/               Vue 3 and Vite interface
+tests/                  Automated tests
+docs/                   Local and remote operation documentation
 ```

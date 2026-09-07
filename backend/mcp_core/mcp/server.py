@@ -23,10 +23,14 @@ class MCPServer:
 
     def handle(self, message: Dict[str, Any]) -> Dict[str, Any] | None:
         """Process one JSON-RPC message and return its response, if any."""
+        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0":
+            return self._error(None, -32600, "Invalid Request")
         request_id = message.get("id")
         method = message.get("method")
         if not isinstance(method, str):
             return self._error(request_id, -32600, "Invalid Request")
+        if "id" in message and (isinstance(request_id, bool) or not isinstance(request_id, (int, str))):
+            return self._error(None, -32600, "Invalid Request")
 
         if method == "notifications/initialized":
             return None
@@ -42,7 +46,7 @@ class MCPServer:
             })
         if method == "tools/call":
             return self._call_tool(request_id, message.get("params"))
-        return self._error(request_id, METHOD_NOT_FOUND, f"Method not found: {method}")
+        return None if "id" not in message else self._error(request_id, METHOD_NOT_FOUND, f"Method not found: {method}")
 
     def _call_tool(self, request_id: Any, params: Any) -> Dict[str, Any]:
         if not isinstance(params, dict) or not isinstance(params.get("name"), str):
